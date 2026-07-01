@@ -1,21 +1,43 @@
 package com.guerrero.timeproject;
 
 import com.guerrero.timeproject.dto.TaskDto;
+import com.guerrero.timeproject.model.Role;
 import com.guerrero.timeproject.model.TaskStatus;
+import com.guerrero.timeproject.model.User;
+import com.guerrero.timeproject.repository.UserRepository;
 import com.guerrero.timeproject.service.TaskService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Transactional
+@WithMockUser(username = "testuser")
 class TaskServiceTimerTest {
 
     @Autowired
     private TaskService taskService;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @BeforeEach
+    void setUp() {
+        // Save mock user in transactional DB context so getAuthenticatedUser() finds it
+        if (!userRepository.existsByUsername("testuser")) {
+            User user = User.builder()
+                    .username("testuser")
+                    .password("password")
+                    .role(Role.ROLE_USER)
+                    .build();
+            userRepository.save(user);
+        }
+    }
 
     @Test
     void testTimerLifecycle() throws InterruptedException {

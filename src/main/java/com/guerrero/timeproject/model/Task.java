@@ -26,6 +26,9 @@ public class Task {
     @Column(length = 1000)
     private String description;
 
+    @Column
+    private String category;
+
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -42,6 +45,10 @@ public class Task {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @PrePersist
     protected void onCreate() {

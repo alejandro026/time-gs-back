@@ -19,4 +19,5 @@ public class TaskDto {
     private String projectName;
     private LocalDateTime createdAt;
     private LocalDateTime activeTimerStartTime; // populated if currently IN_PROGRESS
+    private String category;
 }

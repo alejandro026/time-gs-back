@@ -52,4 +52,24 @@ public class TaskController {
         taskService.deleteTask(id);
         return ResponseEntity.noContent().build();
     }
+
+    // Time Log Auditing Endpoints
+    @GetMapping("/{taskId}/logs")
+    public ResponseEntity<List<com.guerrero.timeproject.dto.TimeLogDto>> getTaskLogs(@PathVariable Long taskId) {
+        return ResponseEntity.ok(taskService.getTaskLogs(taskId));
+    }
+
+    @PostMapping("/{taskId}/logs")
+    public ResponseEntity<TaskDto> addManualLog(
+            @PathVariable Long taskId,
+            @Valid @RequestBody com.guerrero.timeproject.dto.TimeLogDto logDto) {
+        return ResponseEntity.ok(taskService.addManualLog(taskId, logDto));
+    }
+
+    @DeleteMapping("/{taskId}/logs/{logId}")
+    public ResponseEntity<TaskDto> deleteLogSegment(
+            @PathVariable Long taskId,
+            @PathVariable Long logId) {
+        return ResponseEntity.ok(taskService.deleteLogSegment(taskId, logId));
+    }
 }

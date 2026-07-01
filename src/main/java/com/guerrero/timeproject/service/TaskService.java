@@ -1,6 +1,7 @@
 package com.guerrero.timeproject.service;
 
 import com.guerrero.timeproject.dto.TaskDto;
+import com.guerrero.timeproject.dto.TimeLogDto;
 import com.guerrero.timeproject.model.TaskStatus;
 import java.util.List;
 
@@ -12,4 +13,9 @@ public interface TaskService {
     TaskDto updateTask(Long id, TaskDto taskDto);
     TaskDto updateTaskStatus(Long id, TaskStatus status);
     void deleteTask(Long id);
+    
+    // Time log history auditing
+    List<TimeLogDto> getTaskLogs(Long taskId);
+    TaskDto addManualLog(Long taskId, TimeLogDto logDto);
+    TaskDto deleteLogSegment(Long taskId, Long logId);
 }
