@@ -23,11 +23,6 @@ WORKDIR /app
 # Copy the generated JAR from the builder stage
 COPY --from=builder /app/target/*.jar app.jar
 
-# Define default environment variables
-ENV DB_URL=jdbc:postgresql://localhost:5432/timetracker
-ENV DB_USERNAME=postgres
-ENV DB_PASSWORD=postgres
-
 # Expose port
 EXPOSE 8080
 
