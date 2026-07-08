@@ -102,7 +102,7 @@ public class TaskServiceImpl implements TaskService {
                 .description(taskDto.getDescription())
                 .category(taskDto.getCategory())
                 .status(taskDto.getStatus() != null ? taskDto.getStatus() : TaskStatus.TODO)
-                .totalTimeSpent(0L)
+                .totalTimeSpent(taskDto.getTotalTimeSpent() != null ? taskDto.getTotalTimeSpent() : 0L)
                 .project(project)
                 .user(user) // Link user
                 .build();
@@ -247,13 +247,23 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private TaskDto convertToDto(Task task) {
-        LocalDateTime activeTimerStartTime = null;
+        String activeTimerStartTime = null;
         if (task.getStatus() == TaskStatus.IN_PROGRESS) {
             Optional<TimeLog> activeLog = timeLogRepository.findFirstByTaskIdAndEndTimeIsNull(task.getId());
             if (activeLog.isPresent()) {
-                activeTimerStartTime = activeLog.get().getStartTime();
+                LocalDateTime startLocal = activeLog.get().getStartTime();
+                activeTimerStartTime = startLocal.atZone(java.time.ZoneId.systemDefault()).toInstant().toString();
             }
         }
+
+        List<com.guerrero.timeproject.dto.TimeLogDto> logs = timeLogRepository.findByTaskId(task.getId()).stream()
+                .map(log -> com.guerrero.timeproject.dto.TimeLogDto.builder()
+                        .id(log.getId())
+                        .startTime(log.getStartTime())
+                        .endTime(log.getEndTime())
+                        .duration(log.getDuration())
+                        .build())
+                .collect(java.util.stream.Collectors.toList());
 
         return TaskDto.builder()
                 .id(task.getId())
@@ -266,6 +276,7 @@ public class TaskServiceImpl implements TaskService {
                 .projectName(task.getProject() != null ? task.getProject().getName() : null)
                 .createdAt(task.getCreatedAt())
                 .activeTimerStartTime(activeTimerStartTime)
+                .timeLogs(logs)
                 .build();
     }
 
