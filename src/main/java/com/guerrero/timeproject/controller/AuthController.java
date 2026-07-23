@@ -3,16 +3,21 @@ package com.guerrero.timeproject.controller;
 import com.guerrero.timeproject.dto.AuthResponse;
 import com.guerrero.timeproject.dto.LoginRequest;
 import com.guerrero.timeproject.dto.RegisterRequest;
+import com.guerrero.timeproject.dto.TokenRefreshRequest;
+import com.guerrero.timeproject.dto.TokenRefreshResponse;
+import com.guerrero.timeproject.model.RefreshToken;
 import com.guerrero.timeproject.model.Role;
 import com.guerrero.timeproject.model.User;
 import com.guerrero.timeproject.repository.UserRepository;
 import com.guerrero.timeproject.security.JwtTokenProvider;
+import com.guerrero.timeproject.service.RefreshTokenService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import java.security.Principal;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -22,6 +27,7 @@ public class AuthController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
+    private final RefreshTokenService refreshTokenService;
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
@@ -41,12 +47,14 @@ public class AuthController {
 
         User savedUser = userRepository.save(user);
 
-        // Generate JWT token
+        // Generate access token & refresh token
         String jwt = tokenProvider.generateToken(savedUser.getUsername());
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(savedUser.getUsername());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 AuthResponse.builder()
                         .token(jwt)
+                        .refreshToken(refreshToken.getToken())
                         .userId(savedUser.getId())
                         .username(savedUser.getUsername())
                         .role(savedUser.getRole().name())
@@ -65,16 +73,36 @@ public class AuthController {
                     .body("Invalid username or password!");
         }
 
-        // Generate JWT token
+        // Generate access token & refresh token
         String jwt = tokenProvider.generateToken(user.getUsername());
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getUsername());
 
         return ResponseEntity.ok(
                 AuthResponse.builder()
                         .token(jwt)
+                        .refreshToken(refreshToken.getToken())
                         .userId(user.getId())
                         .username(user.getUsername())
                         .role(user.getRole().name())
                         .build()
         );
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refreshAccessToken(@Valid @RequestBody TokenRefreshRequest request) {
+        try {
+            TokenRefreshResponse response = refreshTokenService.rotateRefreshToken(request.getRefreshToken());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logoutUser(Principal principal) {
+        if (principal != null) {
+            refreshTokenService.revokeAllByUser(principal.getName());
+        }
+        return ResponseEntity.ok("Successfully logged out!");
     }
 }
