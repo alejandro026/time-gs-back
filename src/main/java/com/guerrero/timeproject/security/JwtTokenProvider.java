@@ -12,8 +12,18 @@ import java.util.Date;
 @Component
 public class JwtTokenProvider {
 
-    @Value("${app.jwt.secret:9a4f2c8d3b7a1e5f8g0h2i4j6k8l0m2n4o6p8q0r2s4t6u8v0w2x4y6z8A0B2C4D}")
-    private String jwtSecret;
+    private final String jwtSecret;
+
+    /**
+     * Sin valor por defecto: si falta JWT_SECRET la app NO arranca (antes usaba una clave
+     * escrita en el código, con la que cualquiera podía fabricar tokens válidos).
+     */
+    public JwtTokenProvider(@Value("${app.jwt.secret}") String jwtSecret) {
+        if (jwtSecret == null || jwtSecret.getBytes(StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalStateException("JWT_SECRET debe definirse y tener al menos 32 bytes");
+        }
+        this.jwtSecret = jwtSecret;
+    }
 
     @Value("${app.jwt.expiration-ms:86400000}") // 24 hours
     private long jwtExpirationMs;
