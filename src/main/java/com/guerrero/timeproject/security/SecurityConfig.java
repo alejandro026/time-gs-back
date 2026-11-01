@@ -47,6 +47,8 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
+                // Ver nota en backendFinance: sin esto los errores reales se ven como 401.
+                .requestMatchers("/error").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
